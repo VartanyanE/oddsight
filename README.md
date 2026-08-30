@@ -34,3 +34,5 @@ Start with:
 2. Verify Kalshi and Polymarket API capabilities.
 3. Add tested domain calculations for discrepancies and potential arbitrage.
 4. Build the first provider-backed market browser.
+
+Current provider capability notes live in `docs/PROVIDER_CAPABILITIES.md`.
