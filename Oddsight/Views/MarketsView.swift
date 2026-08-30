@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct MarketsView: View {
+    @Environment(OddsightMarketStore.self) private var marketStore
     @State private var searchText = ""
     @State private var selectedCategory: MarketCategory?
-    private let markets = SampleOddsightData.markets
 
     private var filteredMarkets: [Market] {
-        markets.filter { market in
+        marketStore.markets.filter { market in
             let matchesSearch = searchText.isEmpty || market.title.localizedCaseInsensitiveContains(searchText) || market.normalizedQuestion.localizedCaseInsensitiveContains(searchText)
             let matchesCategory = selectedCategory == nil || market.category == selectedCategory
             return matchesSearch && matchesCategory
@@ -16,6 +16,14 @@ struct MarketsView: View {
     var body: some View {
         NavigationStack {
             List {
+                DataStatusView(
+                    isLoading: marketStore.isLoading,
+                    isUsingSampleFallback: marketStore.isUsingSampleFallback,
+                    lastUpdatedAt: marketStore.lastUpdatedAt,
+                    errorMessage: marketStore.errorMessage,
+                    refreshAction: marketStore.refreshKalshiMarkets
+                )
+
                 Section {
                     Picker("Category", selection: $selectedCategory) {
                         Text("All").tag(nil as MarketCategory?)
@@ -26,21 +34,29 @@ struct MarketsView: View {
                 }
 
                 Section("Markets") {
-                    ForEach(filteredMarkets) { market in
-                        NavigationLink {
-                            MarketDetailView(market: market, matchedMarket: SampleOddsightData.matches.first { $0.primaryMarket.id == market.id || $0.comparisonMarket.id == market.id })
-                        } label: {
-                            MarketRow(market: market)
+                    if filteredMarkets.isEmpty {
+                        ContentUnavailableView("No markets", systemImage: "magnifyingglass", description: Text("Try a different search or category."))
+                    } else {
+                        ForEach(filteredMarkets) { market in
+                            NavigationLink {
+                                MarketDetailView(market: market, matchedMarket: marketStore.matchedMarket(for: market))
+                            } label: {
+                                MarketRow(market: market)
+                            }
                         }
                     }
                 }
             }
             .navigationTitle("Market")
             .searchable(text: $searchText, prompt: "Search markets")
+            .refreshable {
+                await marketStore.refreshKalshiMarkets()
+            }
         }
     }
 }
 
 #Preview {
     MarketsView()
+        .environment(OddsightMarketStore())
 }

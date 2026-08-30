@@ -13,6 +13,8 @@ The project currently uses a native SwiftUI iOS app. The first implementation sl
 
 Backend ingestion, market matching, signal evaluation, alerts, and provider integrations are intentionally not implemented yet.
 
+The app now includes a first public Kalshi REST client for live market browsing in Discover and Market. Scanner signals still use sample data until Polymarket live data and automated matching are implemented.
+
 ## Planning Docs
 
 Start with:
@@ -34,5 +36,6 @@ Start with:
 2. Verify Kalshi and Polymarket API capabilities.
 3. Add tested domain calculations for discrepancies and potential arbitrage.
 4. Build the first provider-backed market browser.
+5. Add Polymarket discovery and CLOB pricing.
 
 Current provider capability notes live in `docs/PROVIDER_CAPABILITIES.md`.

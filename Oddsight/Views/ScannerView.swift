@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct ScannerView: View {
+    @Environment(OddsightMarketStore.self) private var marketStore
     @State private var selectedSignalType: SignalType?
-    private let signals = SampleOddsightData.signals
 
     private var filteredSignals: [OddsightSignal] {
-        guard let selectedSignalType else { return signals }
-        return signals.filter { $0.type == selectedSignalType }
+        guard let selectedSignalType else { return marketStore.signals }
+        return marketStore.signals.filter { $0.type == selectedSignalType }
     }
 
     var body: some View {
@@ -38,4 +38,5 @@ struct ScannerView: View {
 
 #Preview {
     ScannerView()
+        .environment(OddsightMarketStore())
 }

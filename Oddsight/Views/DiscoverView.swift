@@ -1,26 +1,40 @@
 import SwiftUI
 
 struct DiscoverView: View {
-    private let signals = SampleOddsightData.signals
-    private let markets = SampleOddsightData.markets
+    @Environment(OddsightMarketStore.self) private var marketStore
+
+    private var biggestMoves: [Market] {
+        marketStore.markets
+            .sorted { abs($0.probabilityChange24h) > abs($1.probabilityChange24h) }
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                Section("Top Signals") {
-                    ForEach(signals.prefix(2)) { signal in
-                        NavigationLink {
-                            MarketDetailView(market: signal.market, matchedMarket: signal.matchedMarket)
-                        } label: {
-                            SignalRow(signal: signal)
+                DataStatusView(
+                    isLoading: marketStore.isLoading,
+                    isUsingSampleFallback: marketStore.isUsingSampleFallback,
+                    lastUpdatedAt: marketStore.lastUpdatedAt,
+                    errorMessage: marketStore.errorMessage,
+                    refreshAction: marketStore.refreshKalshiMarkets
+                )
+
+                if marketStore.isUsingSampleFallback {
+                    Section("Top Signals") {
+                        ForEach(marketStore.signals.prefix(2)) { signal in
+                            NavigationLink {
+                                MarketDetailView(market: signal.market, matchedMarket: signal.matchedMarket)
+                            } label: {
+                                SignalRow(signal: signal)
+                            }
                         }
                     }
                 }
 
                 Section("Biggest Moves") {
-                    ForEach(markets.sorted { abs($0.probabilityChange24h) > abs($1.probabilityChange24h) }.prefix(3)) { market in
+                    ForEach(biggestMoves.prefix(6)) { market in
                         NavigationLink {
-                            MarketDetailView(market: market, matchedMarket: SampleOddsightData.matches.first { $0.primaryMarket.id == market.id || $0.comparisonMarket.id == market.id })
+                            MarketDetailView(market: market, matchedMarket: marketStore.matchedMarket(for: market))
                         } label: {
                             MarketRow(market: market)
                         }
@@ -28,12 +42,8 @@ struct DiscoverView: View {
                 }
             }
             .navigationTitle("Discover")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Label("Fresh sample data", systemImage: "clock")
-                        .labelStyle(.iconOnly)
-                        .foregroundStyle(.secondary)
-                }
+            .refreshable {
+                await marketStore.refreshKalshiMarkets()
             }
         }
     }
@@ -41,4 +51,5 @@ struct DiscoverView: View {
 
 #Preview {
     DiscoverView()
+        .environment(OddsightMarketStore())
 }

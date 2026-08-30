@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RootTabView: View {
+    @State private var marketStore = OddsightMarketStore()
+
     var body: some View {
         TabView {
             DiscoverView()
@@ -24,6 +26,10 @@ struct RootTabView: View {
                 }
         }
         .tint(.cyan)
+        .environment(marketStore)
+        .task {
+            await marketStore.refreshKalshiMarkets()
+        }
     }
 }
 
