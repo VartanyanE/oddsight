@@ -7,7 +7,7 @@ struct RootTabView: View {
         TabView {
             DiscoverView()
                 .tabItem {
-                    Label("Discover", systemImage: "sparkline")
+                    Label("Discover", systemImage: "safari")
                 }
 
             ScannerView()

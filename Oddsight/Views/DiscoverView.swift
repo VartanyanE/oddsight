@@ -11,8 +11,6 @@ struct DiscoverView: View {
     var body: some View {
         NavigationStack {
             List {
-                OddsightHeaderView(subtitle: "Prediction market intelligence")
-
                 DataStatusView(
                     isLoading: marketStore.isLoading,
                     isUsingSampleFallback: marketStore.isUsingSampleFallback,
