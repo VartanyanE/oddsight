@@ -16,7 +16,7 @@ struct DiscoverView: View {
                     isUsingSampleFallback: marketStore.isUsingSampleFallback,
                     lastUpdatedAt: marketStore.lastUpdatedAt,
                     errorMessage: marketStore.errorMessage,
-                    refreshAction: marketStore.refreshKalshiMarkets
+                    refreshAction: marketStore.refreshMarkets
                 )
 
                 if marketStore.isUsingSampleFallback {
@@ -43,7 +43,7 @@ struct DiscoverView: View {
             }
             .navigationTitle("Discover")
             .refreshable {
-                await marketStore.refreshKalshiMarkets()
+                await marketStore.refreshMarkets()
             }
         }
     }

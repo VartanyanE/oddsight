@@ -164,6 +164,13 @@ Use Gamma plus CLOB:
 3. CLOB price history only for chart bootstrap or backfill.
 4. Realtime market stream after polling quality is proven.
 
+Current app implementation:
+
+- Uses Gamma markets for active market discovery.
+- Filters to YES/NO outcomes only because the current native model and UI label contracts as YES and NO.
+- Uses CLOB `/prices` batch requests for token-level BUY and SELL prices when `clobTokenIds` are available.
+- Falls back to Gamma `outcomePrices` when CLOB price hydration fails.
+
 ## Signal Feasibility
 
 | Signal | Feasible For MVP? | Notes |

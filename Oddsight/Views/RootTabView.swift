@@ -28,7 +28,7 @@ struct RootTabView: View {
         .tint(.cyan)
         .environment(marketStore)
         .task {
-            await marketStore.refreshKalshiMarkets()
+            await marketStore.refreshMarkets()
         }
     }
 }

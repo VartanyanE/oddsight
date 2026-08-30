@@ -54,9 +54,9 @@ struct DataStatusView: View {
     }
 
     private var title: String {
-        if isLoading { return "Refreshing Kalshi" }
+        if isLoading { return "Refreshing providers" }
         if isUsingSampleFallback { return "Sample data" }
-        return "Live Kalshi data"
+        return "Live provider data"
     }
 
     private var subtitle: String? {
@@ -66,6 +66,6 @@ struct DataStatusView: View {
         if let lastUpdatedAt {
             return "Updated \(lastUpdatedAt.formatted(date: .omitted, time: .shortened))"
         }
-        return "Tap refresh to load public market data."
+        return "Tap refresh to load public Kalshi and Polymarket data."
     }
 }

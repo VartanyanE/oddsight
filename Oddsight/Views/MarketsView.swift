@@ -21,7 +21,7 @@ struct MarketsView: View {
                     isUsingSampleFallback: marketStore.isUsingSampleFallback,
                     lastUpdatedAt: marketStore.lastUpdatedAt,
                     errorMessage: marketStore.errorMessage,
-                    refreshAction: marketStore.refreshKalshiMarkets
+                    refreshAction: marketStore.refreshMarkets
                 )
 
                 Section {
@@ -50,7 +50,7 @@ struct MarketsView: View {
             .navigationTitle("Market")
             .searchable(text: $searchText, prompt: "Search markets")
             .refreshable {
-                await marketStore.refreshKalshiMarkets()
+                await marketStore.refreshMarkets()
             }
         }
     }
