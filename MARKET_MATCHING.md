@@ -280,5 +280,6 @@ The current SwiftUI app includes a deterministic in-app matcher for live Kalshi 
 - Caps automatic confidence at 92%.
 - Produces `High Confidence`, `Possible Match`, and `Needs Review` labels.
 - Generates live discrepancy and theoretical potential arbitrage signals from matched candidates.
+- Stores and displays a structured match assessment with event similarity, expiration similarity, shared terms, reasons, risks, and generator name.
 
 This V1 matcher does not verify settlement equivalence, resolution source equivalence, timezone equivalence, or contract edge cases. It must not be treated as a verified arbitrage engine.

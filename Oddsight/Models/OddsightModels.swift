@@ -111,6 +111,7 @@ struct MatchedMarket: Identifiable, Hashable {
     let comparisonMarket: Market
     let confidence: Double
     let status: String
+    let assessment: MatchAssessment
 
     nonisolated var discrepancy: CrossMarketDiscrepancy? {
         try? MarketCalculations.discrepancy(between: primaryMarket.quote, and: comparisonMarket.quote)
@@ -126,6 +127,16 @@ struct MatchedMarket: Identifiable, Hashable {
             noAsk: comparisonMarket.quote.noAsk
         )
     }
+}
+
+struct MatchAssessment: Hashable {
+    let eventSimilarity: Double
+    let categoryCompatible: Bool
+    let expirationSimilarity: Double
+    let sharedTerms: [String]
+    let reasons: [String]
+    let risks: [String]
+    let generatedBy: String
 }
 
 struct OddsightSignal: Identifiable, Hashable {

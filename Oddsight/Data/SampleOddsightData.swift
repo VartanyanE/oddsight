@@ -101,7 +101,22 @@ enum SampleOddsightData {
         primaryMarket: kalshiFed,
         comparisonMarket: polymarketFed,
         confidence: 0.82,
-        status: "Possible Match"
+        status: "Possible Match",
+        assessment: MatchAssessment(
+            eventSimilarity: 0.78,
+            categoryCompatible: true,
+            expirationSimilarity: 1.0,
+            sharedTerms: ["federalreserve", "september", "rates"],
+            reasons: [
+                "Both markets refer to a Federal Reserve rate cut around the September meeting.",
+                "The category and expiration window are aligned."
+            ],
+            risks: [
+                "The Polymarket wording may include a wider measurement window.",
+                "Settlement criteria have not been manually verified."
+            ],
+            generatedBy: "Sample assessment"
+        )
     )
 
     static let bitcoinMatch = MatchedMarket(
@@ -109,7 +124,22 @@ enum SampleOddsightData {
         primaryMarket: kalshiBitcoin,
         comparisonMarket: polymarketBitcoin,
         confidence: 0.88,
-        status: "High Confidence"
+        status: "High Confidence",
+        assessment: MatchAssessment(
+            eventSimilarity: 0.86,
+            categoryCompatible: true,
+            expirationSimilarity: 1.0,
+            sharedTerms: ["150k", "2026", "bitcoin"],
+            reasons: [
+                "Both markets refer to Bitcoin above 150,000 USD at the end of 2026.",
+                "Shared threshold and category support a high-confidence candidate."
+            ],
+            risks: [
+                "Price source and exact settlement timestamp still need verification.",
+                "High confidence does not mean verified equivalence."
+            ],
+            generatedBy: "Sample assessment"
+        )
     )
 
     static let markets: [Market] = [

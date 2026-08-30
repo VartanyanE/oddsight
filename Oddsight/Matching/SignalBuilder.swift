@@ -28,7 +28,7 @@ enum SignalBuilder {
                     confidence: min(match.confidence, discrepancy.sourceQuality.supportsExecutableClaim ? 0.86 : 0.62),
                     metricLabel: "Difference",
                     metricValue: difference,
-                    explanation: "Oddsight found similar Kalshi and Polymarket markets with different comparable probabilities. This is a live candidate, not a verified settlement-equivalent match.",
+                    explanation: "Oddsight found similar Kalshi and Polymarket markets with different comparable probabilities. Review the match assessment before treating this as economically equivalent.",
                     detectedDescription: "Live"
                 )
             )

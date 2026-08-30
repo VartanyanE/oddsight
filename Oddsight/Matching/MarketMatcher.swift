@@ -5,7 +5,12 @@ struct MarketMatchCandidate: Equatable {
     let comparisonMarket: Market
     let confidence: Double
     let status: String
+    let eventSimilarity: Double
+    let categoryCompatible: Bool
+    let expirationSimilarity: Double
     let sharedTerms: [String]
+    let reasons: [String]
+    let risks: [String]
 }
 
 enum MarketMatcher {
@@ -22,7 +27,16 @@ enum MarketMatcher {
                 primaryMarket: candidate.primaryMarket,
                 comparisonMarket: candidate.comparisonMarket,
                 confidence: candidate.confidence,
-                status: candidate.status
+                status: candidate.status,
+                assessment: MatchAssessment(
+                    eventSimilarity: candidate.eventSimilarity,
+                    categoryCompatible: candidate.categoryCompatible,
+                    expirationSimilarity: candidate.expirationSimilarity,
+                    sharedTerms: candidate.sharedTerms,
+                    reasons: candidate.reasons,
+                    risks: candidate.risks,
+                    generatedBy: "Deterministic V1"
+                )
             )
         }
     }
@@ -36,7 +50,8 @@ enum MarketMatcher {
             let kalshiTerms = normalizedTerms(for: kalshiMarket)
 
             for polymarketMarket in polymarketMarkets {
-                guard categoriesAreCompatible(kalshiMarket.category, polymarketMarket.category) else {
+                let categoryCompatible = categoriesAreCompatible(kalshiMarket.category, polymarketMarket.category)
+                guard categoryCompatible else {
                     continue
                 }
 
@@ -60,7 +75,21 @@ enum MarketMatcher {
                         comparisonMarket: polymarketMarket,
                         confidence: confidence,
                         status: status(for: confidence),
-                        sharedTerms: sharedTerms
+                        eventSimilarity: max(termSimilarity, titleContainment),
+                        categoryCompatible: categoryCompatible,
+                        expirationSimilarity: expirationScore,
+                        sharedTerms: sharedTerms,
+                        reasons: reasons(
+                            sharedTerms: sharedTerms,
+                            categoryCompatible: categoryCompatible,
+                            expirationScore: expirationScore
+                        ),
+                        risks: risks(
+                            confidence: confidence,
+                            expirationScore: expirationScore,
+                            primaryMarket: kalshiMarket,
+                            comparisonMarket: polymarketMarket
+                        )
                     )
                 )
             }
@@ -134,5 +163,42 @@ enum MarketMatcher {
         if confidence >= 0.78 { return "High Confidence" }
         if confidence >= 0.50 { return "Possible Match" }
         return "Needs Review"
+    }
+
+    private nonisolated static func reasons(sharedTerms: [String], categoryCompatible: Bool, expirationScore: Double) -> [String] {
+        var reasons: [String] = []
+        if categoryCompatible {
+            reasons.append("Markets are in compatible categories.")
+        }
+        if !sharedTerms.isEmpty {
+            reasons.append("Shared normalized terms: \(sharedTerms.prefix(8).joined(separator: ", ")).")
+        }
+        if expirationScore >= 0.75 {
+            reasons.append("Expiration text has overlapping terms.")
+        }
+        return reasons
+    }
+
+    private nonisolated static func risks(
+        confidence: Double,
+        expirationScore: Double,
+        primaryMarket: Market,
+        comparisonMarket: Market
+    ) -> [String] {
+        var risks = [
+            "Settlement rules, resolution source, timezone, and edge cases are not verified by V1 matching."
+        ]
+
+        if confidence < 0.78 {
+            risks.append("Confidence is below the high-confidence threshold.")
+        }
+        if expirationScore < 0.75 {
+            risks.append("Expiration text does not strongly overlap.")
+        }
+        if primaryMarket.resolutionSummary.contains("unavailable") || comparisonMarket.resolutionSummary.contains("unavailable") {
+            risks.append("At least one market has incomplete resolution rules in the current response.")
+        }
+
+        return risks
     }
 }
