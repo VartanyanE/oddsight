@@ -37,6 +37,7 @@ enum SignalType: String, CaseIterable, Identifiable {
     case probabilityMove = "Probability Move"
     case volumeSpike = "Volume Spike"
     case liquidityChange = "Liquidity Change"
+    case newMatchedMarket = "New Matched Market"
 
     var id: String { rawValue }
 }

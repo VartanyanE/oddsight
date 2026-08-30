@@ -15,6 +15,24 @@ enum SignalBuilder {
     private nonisolated static func signals(for match: MatchedMarket) -> [OddsightSignal] {
         var signals: [OddsightSignal] = []
 
+        if match.confidence >= 0.50 {
+            signals.append(
+                OddsightSignal(
+                    id: "signal-new-match-\(match.id)",
+                    type: .newMatchedMarket,
+                    title: "\(match.status): \(match.primaryMarket.title)",
+                    market: match.primaryMarket,
+                    matchedMarket: match,
+                    severity: match.confidence >= 0.78 ? .high : .medium,
+                    confidence: match.confidence,
+                    metricLabel: "Match",
+                    metricValue: match.confidence.percentText,
+                    explanation: "Oddsight found a live Kalshi-to-Polymarket match candidate. Review the match assessment before comparing prices or treating the contracts as equivalent.",
+                    detectedDescription: "Live"
+                )
+            )
+        }
+
         if let discrepancy = match.discrepancy, discrepancy.absoluteDifference >= 0.05 {
             let difference = discrepancy.absoluteDifference.pointsText
             signals.append(

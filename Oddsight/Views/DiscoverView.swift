@@ -16,6 +16,9 @@ struct DiscoverView: View {
                     isUsingSampleFallback: marketStore.isUsingSampleFallback,
                     lastUpdatedAt: marketStore.lastUpdatedAt,
                     errorMessage: marketStore.errorMessage,
+                    marketCount: marketStore.markets.count,
+                    matchCount: marketStore.matches.count,
+                    signalCount: marketStore.signals.count,
                     refreshAction: marketStore.refreshMarkets
                 )
 

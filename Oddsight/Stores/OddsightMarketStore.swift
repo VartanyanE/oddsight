@@ -46,7 +46,7 @@ final class OddsightMarketStore {
         }
 
         do {
-            liveMarkets.append(contentsOf: try await polymarketClient.fetchActiveMarkets())
+            liveMarkets.append(contentsOf: try await polymarketClient.fetchActiveMarkets(limit: 100))
         } catch {
             providerErrors.append("Polymarket: \(error.localizedDescription)")
         }

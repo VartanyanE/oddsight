@@ -117,6 +117,8 @@ struct SignalRow: View {
             return "waveform.path.ecg"
         case .liquidityChange:
             return "drop.degreesign"
+        case .newMatchedMarket:
+            return "link"
         }
     }
 }

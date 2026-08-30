@@ -5,6 +5,9 @@ struct DataStatusView: View {
     let isUsingSampleFallback: Bool
     let lastUpdatedAt: Date?
     let errorMessage: String?
+    let marketCount: Int
+    let matchCount: Int
+    let signalCount: Int
     let refreshAction: () async -> Void
 
     var body: some View {
@@ -64,7 +67,7 @@ struct DataStatusView: View {
             return errorMessage
         }
         if let lastUpdatedAt {
-            return "Updated \(lastUpdatedAt.formatted(date: .omitted, time: .shortened))"
+            return "Updated \(lastUpdatedAt.formatted(date: .omitted, time: .shortened)) · \(marketCount) markets · \(matchCount) matches · \(signalCount) signals"
         }
         return "Tap refresh to load public Kalshi and Polymarket data."
     }

@@ -170,7 +170,7 @@ nonisolated private struct PolymarketGammaMarketDTO: Decodable {
         return Market(
             id: "polymarket-\(id)",
             title: question,
-            normalizedQuestion: question,
+            normalizedQuestion: normalizedQuestion,
             platform: .polymarket,
             category: inferredCategory,
             probability: probability,
@@ -202,6 +202,13 @@ nonisolated private struct PolymarketGammaMarketDTO: Decodable {
         if searchable.contains("movie") || searchable.contains("music") || searchable.contains("entertainment") { return .entertainment }
         if searchable.contains("war") || searchable.contains("global") || searchable.contains("world") { return .worldEvents }
         return .other
+    }
+
+    private nonisolated var normalizedQuestion: String {
+        [question, description, resolutionSource]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
     }
 
     private nonisolated var isYesNoMarket: Bool {

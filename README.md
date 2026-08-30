@@ -15,6 +15,8 @@ Backend ingestion, market matching, signal evaluation, alerts, and provider inte
 
 The app now includes public Kalshi and Polymarket REST clients for live market browsing in Discover and Market. Polymarket discovery is limited to YES/NO markets and hydrates top-of-book prices through the CLOB `/prices` endpoint when token IDs are available. Scanner signals are generated from conservative live match candidates when provider data is available, with sample signals used only during fallback.
 
+Live status rows show market, match, and signal counts after refresh.
+
 ## Planning Docs
 
 Start with:

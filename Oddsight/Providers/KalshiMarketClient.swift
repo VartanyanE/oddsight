@@ -25,12 +25,36 @@ struct KalshiMarketClient {
         self.session = session
     }
 
-    nonisolated func fetchActiveMarkets(limit: Int = 50) async throws -> [Market] {
+    nonisolated func fetchActiveMarkets(limit: Int = 250) async throws -> [Market] {
+        var cursor: String?
+        var markets: [Market] = []
+
+        for _ in 0..<4 {
+            let payload = try await fetchMarketsPage(cursor: cursor)
+            markets.append(contentsOf: payload.markets.compactMap { $0.market })
+            markets = filteredMarkets(markets)
+
+            if markets.count >= limit || payload.cursor == nil {
+                break
+            }
+
+            cursor = payload.cursor
+        }
+
+        return Array(markets.prefix(limit))
+    }
+
+    private nonisolated func fetchMarketsPage(cursor: String?) async throws -> KalshiMarketsResponse {
         var components = URLComponents(url: baseURL.appendingPathComponent("markets"), resolvingAgainstBaseURL: false)
-        components?.queryItems = [
-            URLQueryItem(name: "limit", value: String(limit)),
-            URLQueryItem(name: "status", value: "open")
+        var queryItems = [
+            URLQueryItem(name: "limit", value: "1000"),
+            URLQueryItem(name: "status", value: "open"),
+            URLQueryItem(name: "mve_filter", value: "exclude")
         ]
+        if let cursor {
+            queryItems.append(URLQueryItem(name: "cursor", value: cursor))
+        }
+        components?.queryItems = queryItems
 
         guard let url = components?.url else {
             throw ProviderClientError.invalidURL
@@ -44,21 +68,35 @@ struct KalshiMarketClient {
             throw ProviderClientError.requestFailed(httpResponse.statusCode)
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let payload = try decoder.decode(KalshiMarketsResponse.self, from: data)
+        return try JSONDecoder().decode(KalshiMarketsResponse.self, from: data)
+    }
 
-        return payload.markets.compactMap { $0.market }
+    private nonisolated func filteredMarkets(_ markets: [Market]) -> [Market] {
+        markets
+            .filter { market in
+                let hasUsablePrice = market.bestBid != nil || market.bestAsk != nil || market.noBestBid != nil || market.noBestAsk != nil
+                let hasActivity = market.volume24h > 0 || market.liquidity > 0
+                return hasUsablePrice && hasActivity
+            }
+            .sorted { first, second in
+                if first.volume24h == second.volume24h {
+                    return first.liquidity > second.liquidity
+                }
+                return first.volume24h > second.volume24h
+            }
     }
 }
 
 nonisolated private struct KalshiMarketsResponse: Decodable {
+    let cursor: String?
     let markets: [KalshiMarketDTO]
 }
 
 nonisolated private struct KalshiMarketDTO: Decodable {
     let ticker: String
     let title: String
+    let yesSubTitle: String?
+    let noSubTitle: String?
     let marketType: String?
     let status: String?
     let closeTime: String?
@@ -79,6 +117,8 @@ nonisolated private struct KalshiMarketDTO: Decodable {
     enum CodingKeys: String, CodingKey {
         case ticker
         case title
+        case yesSubTitle = "yes_sub_title"
+        case noSubTitle = "no_sub_title"
         case marketType = "market_type"
         case status
         case closeTime = "close_time"
@@ -115,9 +155,9 @@ nonisolated private struct KalshiMarketDTO: Decodable {
         return Market(
             id: "kalshi-\(ticker)",
             title: title,
-            normalizedQuestion: title,
+            normalizedQuestion: normalizedQuestion,
             platform: .kalshi,
-            category: category.marketCategory,
+            category: inferredCategory,
             probability: probability,
             bestBid: yesBid,
             bestAsk: yesAsk,
@@ -139,6 +179,17 @@ nonisolated private struct KalshiMarketDTO: Decodable {
 
         return rules.first ?? "Resolution rules unavailable from this market list response."
     }
+
+    private nonisolated var normalizedQuestion: String {
+        [title, yesSubTitle, rulesPrimary]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    private nonisolated var inferredCategory: MarketCategory {
+        category.marketCategory(fromFallbackText: normalizedQuestion)
+    }
 }
 
 private extension Optional where Wrapped == String {
@@ -152,12 +203,15 @@ private extension Optional where Wrapped == String {
         return (0...1).contains(value) ? value : nil
     }
 
-    nonisolated var marketCategory: MarketCategory {
-        guard let value = self?.lowercased() else { return .other }
+    nonisolated func marketCategory(fromFallbackText fallbackText: String) -> MarketCategory {
+        let value = [self, fallbackText]
+            .compactMap { $0 }
+            .joined(separator: " ")
+            .lowercased()
 
         if value.contains("politic") || value.contains("election") { return .politics }
         if value.contains("econom") || value.contains("fed") || value.contains("inflation") { return .economics }
-        if value.contains("crypto") || value.contains("bitcoin") || value.contains("ethereum") { return .crypto }
+        if value.contains("crypto") || value.contains("bitcoin") || value.contains("ethereum") || value.contains("btc") { return .crypto }
         if value.contains("tech") || value.contains("ai") { return .technology }
         if value.contains("sport") || value.contains("nfl") || value.contains("nba") || value.contains("mlb") { return .sports }
         if value.contains("weather") || value.contains("temperature") { return .weather }

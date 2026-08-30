@@ -166,6 +166,9 @@ Use Gamma plus CLOB:
 
 Current app implementation:
 
+- Uses `mve_filter=exclude` to avoid Kalshi multivariate combo markets.
+- Paginates Kalshi market discovery and keeps active markets with usable price/activity fields instead of relying on the first newest page.
+- Includes Kalshi subtitles and rules in normalized text because thresholds are often not present in the title.
 - Uses Gamma markets for active market discovery.
 - Filters to YES/NO outcomes only because the current native model and UI label contracts as YES and NO.
 - Uses CLOB `/prices` batch requests for token-level BUY and SELL prices when `clobTokenIds` are available.

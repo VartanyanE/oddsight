@@ -107,7 +107,7 @@ enum MarketMatcher {
     }
 
     nonisolated static func normalizedTerms(for market: Market) -> Set<String> {
-        let text = "\(market.title) \(market.normalizedQuestion)"
+        let text = "\(market.title) \(market.normalizedQuestion) \(market.expirationDescription)"
             .lowercased()
             .replacingOccurrences(of: "$", with: " usd ")
             .replacingOccurrences(of: "%", with: " percent ")
@@ -135,6 +135,28 @@ enum MarketMatcher {
             return "unitedstates"
         case "fed", "fomc":
             return "federalreserve"
+        case "jan":
+            return "january"
+        case "feb":
+            return "february"
+        case "mar":
+            return "march"
+        case "apr":
+            return "april"
+        case "jun":
+            return "june"
+        case "jul":
+            return "july"
+        case "aug":
+            return "august"
+        case "sep", "sept":
+            return "september"
+        case "oct":
+            return "october"
+        case "nov":
+            return "november"
+        case "dec":
+            return "december"
         case "trump", "donaldtrump":
             return "trump"
         default:
