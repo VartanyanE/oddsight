@@ -1,5 +1,85 @@
 import SwiftUI
 
+struct OddsightLogoMark: View {
+    var size: CGFloat = 44
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.22)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.04, green: 0.08, blue: 0.12),
+                            Color(red: 0.02, green: 0.17, blue: 0.19)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            EyeShape()
+                .stroke(.cyan.opacity(0.9), lineWidth: max(2, size * 0.06))
+                .frame(width: size * 0.66, height: size * 0.42)
+
+            Circle()
+                .fill(.cyan)
+                .frame(width: size * 0.16, height: size * 0.16)
+
+            SparklineShape()
+                .stroke(.green, style: StrokeStyle(lineWidth: max(1.6, size * 0.045), lineCap: .round, lineJoin: .round))
+                .frame(width: size * 0.56, height: size * 0.34)
+                .offset(y: size * 0.08)
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel("Oddsight")
+    }
+}
+
+private struct EyeShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.midY), control: CGPoint(x: rect.midX, y: rect.minY))
+        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.midY), control: CGPoint(x: rect.midX, y: rect.maxY))
+        return path
+    }
+}
+
+private struct SparklineShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY * 0.70))
+        path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.28, y: rect.maxY * 0.62))
+        path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.44, y: rect.maxY * 0.38))
+        path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.62, y: rect.maxY * 0.48))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.18))
+        return path
+    }
+}
+
+struct OddsightHeaderView: View {
+    let subtitle: String
+
+    var body: some View {
+        Section {
+            HStack(spacing: 14) {
+                OddsightLogoMark(size: 52)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Oddsight")
+                        .font(.title2.weight(.bold))
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.vertical, 6)
+        }
+    }
+}
+
 struct MetricPill: View {
     let title: String
     let value: String
