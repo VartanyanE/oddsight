@@ -70,12 +70,39 @@ struct Market: Identifiable, Hashable {
     let probability: Double
     let bestBid: Double?
     let bestAsk: Double?
+    let noBestBid: Double?
+    let noBestAsk: Double?
     let volume24h: Double
     let liquidity: Double
     let probabilityChange24h: Double
     let expirationDescription: String
     let resolutionSummary: String
     let sourceURL: String
+
+    nonisolated var quote: BinaryMarketQuote {
+        let fallbackMidpoint = bestBid.flatMap { bid in
+            bestAsk.map { ask in
+                (bid + ask) / 2
+            }
+        }
+
+        return (try? MarketCalculations.directQuote(
+            yesBid: bestBid,
+            yesAsk: bestAsk,
+            noBid: noBestBid,
+            noAsk: noBestAsk,
+            lastTradePrice: probability,
+            midpoint: fallbackMidpoint
+        )) ?? BinaryMarketQuote(
+            yesBid: nil,
+            yesAsk: nil,
+            noBid: nil,
+            noAsk: nil,
+            lastTradePrice: nil,
+            midpoint: nil,
+            sourceQuality: .unavailable
+        )
+    }
 }
 
 struct MatchedMarket: Identifiable, Hashable {
@@ -85,8 +112,19 @@ struct MatchedMarket: Identifiable, Hashable {
     let confidence: Double
     let status: String
 
-    var probabilityDifference: Double {
-        abs(primaryMarket.probability - comparisonMarket.probability)
+    nonisolated var discrepancy: CrossMarketDiscrepancy? {
+        try? MarketCalculations.discrepancy(between: primaryMarket.quote, and: comparisonMarket.quote)
+    }
+
+    nonisolated var probabilityDifference: Double {
+        discrepancy?.absoluteDifference ?? abs(primaryMarket.probability - comparisonMarket.probability)
+    }
+
+    nonisolated var potentialArbitrage: PotentialArbitrage? {
+        try? MarketCalculations.potentialArbitrage(
+            yesAsk: primaryMarket.quote.yesAsk,
+            noAsk: comparisonMarket.quote.noAsk
+        )
     }
 }
 

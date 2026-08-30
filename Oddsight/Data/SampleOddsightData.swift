@@ -10,6 +10,8 @@ enum SampleOddsightData {
         probability: 0.41,
         bestBid: 0.40,
         bestAsk: 0.43,
+        noBestBid: 0.57,
+        noBestAsk: 0.60,
         volume24h: 820000,
         liquidity: 340000,
         probabilityChange24h: 0.06,
@@ -27,6 +29,8 @@ enum SampleOddsightData {
         probability: 0.48,
         bestBid: 0.47,
         bestAsk: 0.50,
+        noBestBid: 0.49,
+        noBestAsk: 0.51,
         volume24h: 690000,
         liquidity: 275000,
         probabilityChange24h: 0.02,
@@ -44,6 +48,8 @@ enum SampleOddsightData {
         probability: 0.29,
         bestBid: 0.28,
         bestAsk: 0.31,
+        noBestBid: 0.69,
+        noBestAsk: 0.72,
         volume24h: 410000,
         liquidity: 190000,
         probabilityChange24h: -0.04,
@@ -61,6 +67,8 @@ enum SampleOddsightData {
         probability: 0.34,
         bestBid: 0.33,
         bestAsk: 0.36,
+        noBestBid: 0.64,
+        noBestAsk: 0.67,
         volume24h: 525000,
         liquidity: 225000,
         probabilityChange24h: 0.08,
@@ -78,6 +86,8 @@ enum SampleOddsightData {
         probability: 0.57,
         bestBid: 0.55,
         bestAsk: 0.59,
+        noBestBid: 0.41,
+        noBestAsk: 0.45,
         volume24h: 120000,
         liquidity: 86000,
         probabilityChange24h: 0.01,
@@ -112,19 +122,36 @@ enum SampleOddsightData {
 
     static let matches: [MatchedMarket] = [fedMatch, bitcoinMatch]
 
-    static let signals: [OddsightSignal] = [
+    static var signals: [OddsightSignal] {
+        let fedDifference = fedMatch.probabilityDifference.pointsText
+        let fedArbitrage = fedMatch.potentialArbitrage
+
+        return [
         OddsightSignal(
             id: "signal-fed-discrepancy",
             type: .crossMarketDiscrepancy,
-            title: "Fed cut markets differ by 7 points",
+            title: "Fed cut markets differ by \(fedDifference)",
             market: kalshiFed,
             matchedMarket: fedMatch,
             severity: .high,
             confidence: 0.74,
             metricLabel: "Difference",
-            metricValue: "7 pts",
+            metricValue: fedDifference,
             explanation: "Kalshi implies 41% while Polymarket implies 48%. Match remains possible because the exact measurement window may differ.",
             detectedDescription: "4 min ago"
+        ),
+        OddsightSignal(
+            id: "signal-fed-potential-arbitrage",
+            type: .potentialArbitrage,
+            title: "Fed match has a theoretical price gap",
+            market: kalshiFed,
+            matchedMarket: fedMatch,
+            severity: .high,
+            confidence: 0.70,
+            metricLabel: "Gross Return",
+            metricValue: fedArbitrage?.grossReturn.percentText ?? "Unavailable",
+            explanation: "A Kalshi YES ask and Polymarket NO ask combine below $1 in sample data. This remains theoretical until fees, liquidity, and settlement equivalence are verified.",
+            detectedDescription: "6 min ago"
         ),
         OddsightSignal(
             id: "signal-btc-move",
@@ -152,5 +179,6 @@ enum SampleOddsightData {
             explanation: "Sample volume is elevated relative to other economics markets. Real baseline detection will require stored historical snapshots.",
             detectedDescription: "18 min ago"
         )
-    ]
+        ]
+    }
 }

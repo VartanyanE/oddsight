@@ -126,6 +126,11 @@ extension Double {
         formatted(.percent.precision(.fractionLength(0)))
     }
 
+    var pointsText: String {
+        let points = self * 100
+        return points.formatted(.number.precision(.fractionLength(0))) + " pts"
+    }
+
     var signedPointsText: String {
         let points = self * 100
         return points.formatted(.number.precision(.fractionLength(0)).sign(strategy: .always())) + " pts"
