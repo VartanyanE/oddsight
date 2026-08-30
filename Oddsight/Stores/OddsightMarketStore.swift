@@ -13,6 +13,9 @@ final class OddsightMarketStore {
     var lastUpdatedAt: Date?
     var isUsingSampleFallback = true
 
+    private var liveMatches: [MatchedMarket] = []
+    private var liveSignals: [OddsightSignal] = []
+
     init(
         kalshiClient: KalshiMarketClient = KalshiMarketClient(),
         polymarketClient: PolymarketMarketClient = PolymarketMarketClient()
@@ -22,11 +25,11 @@ final class OddsightMarketStore {
     }
 
     var matches: [MatchedMarket] {
-        SampleOddsightData.matches
+        isUsingSampleFallback ? SampleOddsightData.matches : liveMatches
     }
 
     var signals: [OddsightSignal] {
-        SampleOddsightData.signals
+        isUsingSampleFallback ? SampleOddsightData.signals : liveSignals
     }
 
     func refreshMarkets() async {
@@ -52,7 +55,11 @@ final class OddsightMarketStore {
             errorMessage = providerErrors.isEmpty ? "Providers returned no active binary markets. Showing sample data." : providerErrors.joined(separator: " ")
             isUsingSampleFallback = true
         } else {
-            markets = liveMarkets.sorted { $0.volume24h > $1.volume24h }
+            let sortedMarkets = liveMarkets.sorted { $0.volume24h > $1.volume24h }
+            let matches = MarketMatcher.matchMarkets(sortedMarkets)
+            markets = sortedMarkets
+            liveMatches = matches
+            liveSignals = SignalBuilder.buildSignals(for: matches)
             lastUpdatedAt = Date()
             isUsingSampleFallback = false
             errorMessage = providerErrors.isEmpty ? nil : providerErrors.joined(separator: " ")

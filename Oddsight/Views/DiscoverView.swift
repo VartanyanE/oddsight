@@ -19,7 +19,7 @@ struct DiscoverView: View {
                     refreshAction: marketStore.refreshMarkets
                 )
 
-                if marketStore.isUsingSampleFallback {
+                if !marketStore.signals.isEmpty {
                     Section("Top Signals") {
                         ForEach(marketStore.signals.prefix(2)) { signal in
                             NavigationLink {
@@ -28,6 +28,10 @@ struct DiscoverView: View {
                                 SignalRow(signal: signal)
                             }
                         }
+                    }
+                } else if !marketStore.isUsingSampleFallback {
+                    Section("Top Signals") {
+                        ContentUnavailableView("No live signals", systemImage: "scope", description: Text("Live markets loaded, but no conservative cross-market candidates met the scanner threshold."))
                     }
                 }
 

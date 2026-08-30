@@ -122,21 +122,21 @@ struct SignalRow: View {
 }
 
 extension Double {
-    var percentText: String {
+    nonisolated var percentText: String {
         formatted(.percent.precision(.fractionLength(0)))
     }
 
-    var pointsText: String {
+    nonisolated var pointsText: String {
         let points = self * 100
         return points.formatted(.number.precision(.fractionLength(0))) + " pts"
     }
 
-    var signedPointsText: String {
+    nonisolated var signedPointsText: String {
         let points = self * 100
         return points.formatted(.number.precision(.fractionLength(0)).sign(strategy: .always())) + " pts"
     }
 
-    var compactDollarText: String {
+    nonisolated var compactDollarText: String {
         formatted(.currency(code: "USD").notation(.compactName).precision(.fractionLength(0)))
     }
 }

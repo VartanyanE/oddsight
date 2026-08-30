@@ -267,3 +267,18 @@ MVP should start with:
 - Manual review for any signal claiming potential arbitrage.
 
 Do not attempt broad universal matching across every category before the scanner proves value.
+
+## Current Native App V1
+
+The current SwiftUI app includes a deterministic in-app matcher for live Kalshi and Polymarket markets. It:
+
+- Compares only Kalshi-to-Polymarket market pairs.
+- Requires compatible categories.
+- Normalizes titles and questions into comparable terms.
+- Applies a small alias map for common terms such as BTC/Bitcoin and Fed/FOMC.
+- Scores token overlap, containment, and expiration text overlap.
+- Caps automatic confidence at 92%.
+- Produces `High Confidence`, `Possible Match`, and `Needs Review` labels.
+- Generates live discrepancy and theoretical potential arbitrage signals from matched candidates.
+
+This V1 matcher does not verify settlement equivalence, resolution source equivalence, timezone equivalence, or contract edge cases. It must not be treated as a verified arbitrage engine.
