@@ -1,14 +1,49 @@
 import Foundation
 
 enum SignalBuilder {
-    nonisolated static func buildSignals(for matches: [MatchedMarket]) -> [OddsightSignal] {
-        matches.flatMap { match in
+    nonisolated static func buildSignals(
+        for matches: [MatchedMarket],
+        movements: [MarketMovement] = [],
+        markets: [Market]? = nil
+    ) -> [OddsightSignal] {
+        let matchSignals = matches.flatMap { match in
             signals(for: match)
         }
-        .sorted { first, second in
+        let movementMarkets = markets ?? matches.flatMap { [$0.primaryMarket, $0.comparisonMarket] }
+
+        return (matchSignals + movementSignals(from: movements, markets: movementMarkets)).sorted { first, second in
             severityRank(first.severity) == severityRank(second.severity)
                 ? first.confidence > second.confidence
                 : severityRank(first.severity) > severityRank(second.severity)
+        }
+    }
+
+    nonisolated static func movementSignals(from movements: [MarketMovement], markets: [Market]) -> [OddsightSignal] {
+        movementSignals(from: movements, marketLookup: Dictionary(uniqueKeysWithValues: markets.map { ($0.id, $0) }))
+    }
+
+    private nonisolated static func movementSignals(
+        from movements: [MarketMovement],
+        marketLookup: [String: Market]
+    ) -> [OddsightSignal] {
+        movements.compactMap { movement in
+            guard let market = marketLookup[movement.marketID], abs(movement.change) >= 0.05 else {
+                return nil
+            }
+            let magnitude = abs(movement.change)
+            return OddsightSignal(
+                id: "signal-movement-\(movement.window.rawValue)-\(market.id)-\(Int(movement.currentObservedAt.timeIntervalSince1970))",
+                type: .probabilityMove,
+                title: "Probability moved \(movement.change >= 0 ? "up" : "down") \(magnitude.pointsText)",
+                market: market,
+                matchedMarket: nil,
+                severity: movementSeverity(for: magnitude),
+                confidence: movementConfidence(for: market.quote.sourceQuality),
+                metricLabel: movement.window.displayName + " Move",
+                metricValue: movement.change.signedPointsText,
+                explanation: "Oddsight compared locally stored observations for this market. The move reflects implied probability, not a guaranteed forecast.",
+                detectedDescription: "Live · \(movement.window.displayName)"
+            )
         }
     }
 
@@ -81,6 +116,21 @@ enum SignalBuilder {
         if difference >= 0.10 { return .high }
         if difference >= 0.05 { return .medium }
         return .low
+    }
+
+    private nonisolated static func movementSeverity(for magnitude: Double) -> SignalSeverity {
+        if magnitude >= 0.15 { return .critical }
+        if magnitude >= 0.10 { return .high }
+        return .medium
+    }
+
+    private nonisolated static func movementConfidence(for quality: PriceSourceQuality) -> Double {
+        switch quality {
+        case .executableBidAsk: 0.90
+        case .midpoint: 0.78
+        case .lastTrade: 0.62
+        case .unavailable: 0.45
+        }
     }
 
     private nonisolated static func severityRank(_ severity: SignalSeverity) -> Int {

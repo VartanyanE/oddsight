@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct DataStatusView: View {
-    let isLoading: Bool
-    let isUsingSampleFallback: Bool
+    let state: OddsightMarketStore.DataSourceState
     let lastUpdatedAt: Date?
     let errorMessage: String?
     let marketCount: Int
@@ -46,20 +45,46 @@ struct DataStatusView: View {
     }
 
     private var iconName: String {
-        if isLoading { return "arrow.triangle.2.circlepath" }
-        if errorMessage != nil { return "exclamationmark.triangle" }
-        return isUsingSampleFallback ? "shippingbox" : "checkmark.seal"
+        switch state {
+        case .initial, .sampleFallback:
+            return "shippingbox"
+        case .loading:
+            return "arrow.triangle.2.circlepath"
+        case .partial:
+            return "exclamationmark.triangle"
+        case .live:
+            return "checkmark.seal"
+        }
+    }
+
+    private var isLoading: Bool {
+        state == .loading
     }
 
     private var iconColor: Color {
-        if errorMessage != nil { return .orange }
-        return isUsingSampleFallback ? .secondary : .green
+        switch state {
+        case .partial, .sampleFallback:
+            return .orange
+        case .live:
+            return .green
+        case .initial, .loading:
+            return .secondary
+        }
     }
 
     private var title: String {
-        if isLoading { return "Refreshing providers" }
-        if isUsingSampleFallback { return "Sample data" }
-        return "Live provider data"
+        switch state {
+        case .initial:
+            return "Sample data"
+        case .loading:
+            return "Refreshing providers"
+        case .live:
+            return "Live provider data"
+        case .partial(let failedProviders):
+            return "Partial live data · \(providerNames(failedProviders)) unavailable"
+        case .sampleFallback:
+            return "Sample fallback"
+        }
     }
 
     private var subtitle: String? {
@@ -70,5 +95,9 @@ struct DataStatusView: View {
             return "Updated \(lastUpdatedAt.formatted(date: .omitted, time: .shortened)) · \(marketCount) markets · \(matchCount) matches · \(signalCount) signals"
         }
         return "Tap refresh to load public Kalshi and Polymarket data."
+    }
+
+    private func providerNames(_ providers: [PredictionPlatform]) -> String {
+        providers.map(\.rawValue).joined(separator: ", ")
     }
 }

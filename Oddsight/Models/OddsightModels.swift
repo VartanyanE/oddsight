@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum PredictionPlatform: String, CaseIterable, Identifiable {
+enum PredictionPlatform: String, Codable, CaseIterable, Identifiable, Sendable {
     case kalshi = "Kalshi"
     case polymarket = "Polymarket"
 
@@ -17,7 +17,7 @@ enum PredictionPlatform: String, CaseIterable, Identifiable {
     }
 }
 
-enum MarketCategory: String, CaseIterable, Identifiable {
+enum MarketCategory: String, CaseIterable, Identifiable, Sendable {
     case politics = "Politics"
     case economics = "Economics"
     case crypto = "Crypto"
@@ -31,7 +31,7 @@ enum MarketCategory: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-enum SignalType: String, CaseIterable, Identifiable {
+enum SignalType: String, CaseIterable, Identifiable, Sendable {
     case crossMarketDiscrepancy = "Cross-Market Discrepancy"
     case potentialArbitrage = "Potential Arbitrage"
     case probabilityMove = "Probability Move"
@@ -42,7 +42,7 @@ enum SignalType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-enum SignalSeverity: String {
+enum SignalSeverity: String, Sendable {
     case low = "Low"
     case medium = "Medium"
     case high = "High"
@@ -62,7 +62,7 @@ enum SignalSeverity: String {
     }
 }
 
-struct Market: Identifiable, Hashable {
+struct Market: Identifiable, Hashable, Sendable {
     let id: String
     let title: String
     let normalizedQuestion: String
@@ -102,6 +102,27 @@ struct Market: Identifiable, Hashable {
             lastTradePrice: nil,
             midpoint: nil,
             sourceQuality: .unavailable
+        )
+    }
+
+    nonisolated func withProbabilityChange24h(_ change: Double) -> Market {
+        Market(
+            id: id,
+            title: title,
+            normalizedQuestion: normalizedQuestion,
+            platform: platform,
+            category: category,
+            probability: probability,
+            bestBid: bestBid,
+            bestAsk: bestAsk,
+            noBestBid: noBestBid,
+            noBestAsk: noBestAsk,
+            volume24h: volume24h,
+            liquidity: liquidity,
+            probabilityChange24h: change,
+            expirationDescription: expirationDescription,
+            resolutionSummary: resolutionSummary,
+            sourceURL: sourceURL
         )
     }
 }

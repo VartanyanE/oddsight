@@ -17,8 +17,7 @@ struct MarketsView: View {
         NavigationStack {
             List {
                 DataStatusView(
-                    isLoading: marketStore.isLoading,
-                    isUsingSampleFallback: marketStore.isUsingSampleFallback,
+                    state: marketStore.dataSourceState,
                     lastUpdatedAt: marketStore.lastUpdatedAt,
                     errorMessage: marketStore.errorMessage,
                     marketCount: marketStore.markets.count,

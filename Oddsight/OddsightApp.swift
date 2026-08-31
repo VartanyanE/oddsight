@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct OddsightApp: App {
+    @UIApplicationDelegateAdaptor(OddsightAppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()

@@ -1,6 +1,9 @@
+import Charts
 import SwiftUI
 
 struct MarketDetailView: View {
+    @Environment(OddsightMarketStore.self) private var marketStore
+    @State private var isCreatingAlert = false
     let market: Market
     let matchedMarket: MatchedMarket?
 
@@ -41,6 +44,13 @@ struct MarketDetailView: View {
                 LabeledContent("Liquidity", value: market.liquidity.compactDollarText)
                 LabeledContent("24h move", value: market.probabilityChange24h.signedPointsText)
                 LabeledContent("Expiration", value: market.expirationDescription)
+            }
+
+            Section("Probability History") {
+                ProbabilityHistoryChart(
+                    snapshots: marketStore.snapshotHistory[market.id] ?? [],
+                    errorMessage: marketStore.historyErrors[market.id]
+                )
             }
 
             if let matchedMarket {
@@ -102,9 +112,136 @@ struct MarketDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            Section {
+                Button {
+                    isCreatingAlert = true
+                } label: {
+                    Label("Create Probability Alert", systemImage: "bell.badge")
+                }
+            }
         }
         .navigationTitle("Market")
         .navigationBarTitleDisplayMode(.inline)
+        .task(id: market.id) {
+            await marketStore.loadHistory(for: market.id)
+        }
+        .sheet(isPresented: $isCreatingAlert) {
+            CreateMarketAlertView(market: market)
+        }
+    }
+}
+
+private struct CreateMarketAlertView: View {
+    @Environment(OddsightMarketStore.self) private var marketStore
+    @Environment(\.dismiss) private var dismiss
+    let market: Market
+    @State private var direction: ProbabilityAlertDirection = .risesAbove
+    @State private var threshold: Double
+
+    init(market: Market) {
+        self.market = market
+        _threshold = State(initialValue: min(1, max(0, market.probability + 0.05)))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Condition") {
+                    Picker("Direction", selection: $direction) {
+                        ForEach(ProbabilityAlertDirection.allCases) { direction in
+                            Text(direction.displayName).tag(direction)
+                        }
+                    }
+                    LabeledContent("Threshold", value: threshold.percentText)
+                    Slider(value: $threshold, in: 0...1, step: 0.01)
+                }
+
+                if !marketStore.canCreateAlert {
+                    Section {
+                        ContentUnavailableView(
+                            "Alert limit reached",
+                            systemImage: "lock.fill",
+                            description: Text("The \(marketStore.currentTier.displayName) plan allows \(marketStore.alertUsageDescription.lowercased()). Plan upgrades are coming later.")
+                        )
+                    }
+                }
+
+                Section("Current Market") {
+                    LabeledContent("Probability", value: market.probability.percentText)
+                    Text(market.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("New Alert")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task {
+                            if await marketStore.addAlert(for: market, direction: direction, threshold: threshold) {
+                                dismiss()
+                            }
+                        }
+                    }
+                    .disabled(!marketStore.canCreateAlert)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+private struct ProbabilityHistoryChart: View {
+    let snapshots: [MarketSnapshot]
+    let errorMessage: String?
+
+    var body: some View {
+        if let errorMessage {
+            ContentUnavailableView(
+                "History unavailable",
+                systemImage: "chart.xyaxis.line",
+                description: Text(errorMessage)
+            )
+        } else if snapshots.count < 2 {
+            ContentUnavailableView(
+                "Collecting history",
+                systemImage: "chart.xyaxis.line",
+                description: Text("Oddsight needs at least two observations before it can draw a trend.")
+            )
+        } else {
+            Chart(snapshots, id: \.observedAt) { snapshot in
+                AreaMark(
+                    x: .value("Observed", snapshot.observedAt),
+                    y: .value("Probability", snapshot.probability)
+                )
+                .foregroundStyle(.cyan.opacity(0.12))
+
+                LineMark(
+                    x: .value("Observed", snapshot.observedAt),
+                    y: .value("Probability", snapshot.probability)
+                )
+                .foregroundStyle(.cyan)
+                .interpolationMethod(.monotone)
+            }
+            .chartYScale(domain: 0...1)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: [0, 0.25, 0.5, 0.75, 1]) { value in
+                    AxisGridLine()
+                    AxisValueLabel {
+                        if let probability = value.as(Double.self) {
+                            Text(probability, format: .percent.precision(.fractionLength(0)))
+                        }
+                    }
+                }
+            }
+            .frame(height: 190)
+            .accessibilityLabel("Probability history")
+        }
     }
 }
 
@@ -203,4 +340,5 @@ private extension Double {
     NavigationStack {
         MarketDetailView(market: SampleOddsightData.kalshiFed, matchedMarket: SampleOddsightData.fedMatch)
     }
+    .environment(OddsightMarketStore())
 }

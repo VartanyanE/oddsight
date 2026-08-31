@@ -1,11 +1,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    let automaticallyRefreshes: Bool
+
+    init(automaticallyRefreshes: Bool = true) {
+        self.automaticallyRefreshes = automaticallyRefreshes
+    }
+
     var body: some View {
-        RootTabView()
+        RootTabView(automaticallyRefreshes: automaticallyRefreshes)
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(automaticallyRefreshes: false)
 }

@@ -34,6 +34,17 @@ struct ScannerView: View {
                         }
                     }
                 }
+
+                if marketStore.isScannerLimited {
+                    Section {
+                        Label(
+                            "Your \(marketStore.currentTier.displayName) plan shows the top \(marketStore.entitlements.scannerSignalLimit ?? 0) signals. Expanded Scanner access is coming with plan upgrades.",
+                            systemImage: "lock.fill"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    }
+                }
             }
             .navigationTitle("Scanner")
         }
